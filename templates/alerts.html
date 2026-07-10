@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Watchdog IDS - Security Alerts</title>
+
+<meta http-equiv="refresh" content="10" id="autoRefresh">
+
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:#0b1220;
+color:white;
+}
+
+
+/* HEADER */
+
+.header{
+background:linear-gradient(90deg,#0f172a,#020617);
+padding:14px 25px;
+font-size:22px;
+font-weight:bold;
+position:relative;
+display:flex;
+align-items:center;
+}
+
+
+/* LOGO */
+
+.logo{
+width:40px;
+margin-right:12px;
+}
+
+
+/* MENU */
+
+.menu-container{
+position:absolute;
+right:20px;
+top:10px;
+}
+
+.menu-btn{
+background:#1e293b;
+color:white;
+border:none;
+padding:10px 18px;
+border-radius:8px;
+cursor:pointer;
+font-size:16px;
+}
+
+.menu-btn:hover{
+background:#334155;
+}
+
+.dropdown{
+display:none;
+position:absolute;
+right:0;
+top:45px;
+background:#1f2937;
+border-radius:10px;
+width:180px;
+box-shadow:0 0 10px black;
+overflow:hidden;
+z-index:999;
+}
+
+.dropdown a{
+display:block;
+padding:12px;
+color:white;
+text-decoration:none;
+border-bottom:1px solid #374151;
+}
+
+.dropdown a:hover{
+background:#334155;
+}
+
+
+
+/* LAYOUT */
+
+.container{
+display:grid;
+grid-template-columns:260px auto;
+gap:20px;
+padding:20px;
+}
+
+
+/* LEFT MENU */
+
+.menu{
+background:#1e293b;
+padding:20px;
+border-radius:12px;
+height:600px;
+}
+
+.menu h3{
+margin-bottom:15px;
+margin-top:20px;
+}
+
+.menu a{
+
+display:block;
+background:#334155;
+margin-bottom:10px;
+padding:12px;
+border-radius:8px;
+text-decoration:none;
+color:white;
+text-align:center;
+transition:0.2s;
+
+}
+
+.menu a:hover{
+background:#475569;
+}
+
+
+/* RIGHT PANEL */
+
+.logs{
+background:#1e293b;
+padding:20px;
+border-radius:12px;
+height:600px;
+overflow:auto;
+}
+
+
+/* TITLE */
+
+.title{
+font-size:22px;
+margin-bottom:15px;
+}
+
+
+/* SEARCH */
+
+.searchBox{
+
+width:100%;
+padding:10px;
+margin-bottom:15px;
+
+border-radius:6px;
+border:none;
+
+background:#020617;
+color:white;
+
+}
+
+
+
+/* TABLE */
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th{
+background:#020617;
+padding:12px;
+text-align:left;
+font-size:14px;
+position:sticky;
+top:0;
+}
+
+td{
+padding:10px;
+border-bottom:1px solid #374151;
+font-size:14px;
+}
+
+
+/* HOVER */
+
+tr:hover{
+background:#334155;
+cursor:pointer;
+}
+
+
+/* COLORS */
+
+.low{
+color:#4ade80;
+font-weight:bold;
+}
+
+.medium{
+color:#facc15;
+font-weight:bold;
+}
+
+.high{color:#ef4444;font-weight:bold;}
+.critical{
+color:#7f1d1d;   /* dark red */
+font-weight:bold;
+}
+.action{
+color:#60a5fa;
+font-weight:bold;
+}
+
+
+</style>
+
+</head>
+
+<body>
+
+
+
+<!-- HEADER -->
+
+<div class="header">
+
+<img src="/static/logo.png" class="logo">
+
+Watchdog IDS - Security Alerts
+
+
+<div class="menu-container">
+
+<button class="menu-btn" onclick="toggleMenu()">
+☰ Menu
+</button>
+
+<div id="dropdownMenu" class="dropdown">
+
+<a href="/dashboard">Dashboard</a>
+<a href="/live-logs">Live Logs</a>
+<a href="/alerts">Alerts</a>
+<a href="/report">Reports</a>
+<a href="/logout">Logout</a>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="container">
+
+
+
+<!-- LEFT PANEL -->
+
+<div class="menu">
+
+<h3>Security Logs</h3>
+
+<p style="font-size:18px;font-weight:bold;margin-bottom:20px">
+
+Total Logs: {{ logs|length }}
+
+</p>
+
+
+<h3>Actions</h3>
+
+<a href="/alerts">
+🔄 Refresh Logs
+</a>
+
+<a href="/export-logs">
+⬇ Export Logs
+</a>
+
+<a href="/clear-logs">
+🧹 Clear Logs
+</a>
+
+
+<p style="font-size:13px;color:#94a3b8;margin-top:15px">
+
+Click any log row to view event details
+
+</p>
+
+
+</div>
+
+
+
+<!-- RIGHT PANEL -->
+
+<div class="logs">
+
+
+<div class="title">
+
+Security Intrusion Alerts
+
+</div>
+
+
+
+<input
+type="text"
+id="searchBox"
+class="searchBox"
+placeholder="Search alerts..."
+onkeyup="searchLogs()"
+onfocus="stopRefresh()"
+onblur="startRefresh()"
+>
+
+
+
+<table id="alertTable">
+
+
+<tr>
+
+<th>Keyword</th>
+<th>Date & Time</th>
+<th>Source</th>
+<th>EventID</th>
+<th>Category</th>
+<th>Action</th>
+<th>Severity</th>
+
+</tr>
+
+
+
+{% for log in logs %}
+
+<tr onclick="showDetails(
+'{{log.level}}',
+'{{log.created_at}}',
+'{{log.source}}',
+'{{log.event_id}}',
+'{{log.task}}',
+'{{log.attack_type}}',
+'{{log.severity}}'
+)">
+
+
+
+<td>{{ log.level }}</td>
+
+<td>{{ log.created_at }}</td>
+
+<td>{{ log.source }}</td>
+
+<td>{{ log.event_id }}</td>
+
+<td>{{ log.task }}</td>
+
+<td class="action">
+{{ log.attack_type }}
+</td>
+
+<td class="{{log.severity|lower}}">
+{{ log.severity }}
+</td>
+
+</tr>
+
+{% endfor %}
+
+
+</table>
+
+
+</div>
+
+</div>
+
+
+
+<script>
+
+
+/* MENU */
+
+function toggleMenu(){
+
+var menu=document.getElementById("dropdownMenu");
+
+menu.style.display=
+menu.style.display=="block"?"none":"block";
+
+}
+
+
+
+/* SEARCH */
+
+function searchLogs(){
+
+let input=document.getElementById("searchBox").value.toLowerCase();
+
+let rows=document.querySelectorAll("#alertTable tr");
+
+for(let i=1;i<rows.length;i++){
+
+let text=rows[i].innerText.toLowerCase();
+
+rows[i].style.display=
+text.includes(input)?"":"none";
+
+}
+
+}
+
+
+
+/* STOP REFRESH */
+
+function stopRefresh(){
+
+let tag=document.getElementById("autoRefresh");
+
+if(tag) tag.remove();
+
+}
+
+
+
+/* RESTORE REFRESH */
+
+function startRefresh(){
+
+location.reload();
+
+}
+
+
+
+/* EVENT DETAILS */
+
+function showDetails(
+level,
+time,
+source,
+eventid,
+task,
+action,
+severity
+){
+
+alert(
+
+"SECURITY ALERT DETAILS\n\n"+
+
+"Level: "+level+"\n"+
+"Time: "+time+"\n"+
+"Source: "+source+"\n"+
+"EventID: "+eventid+"\n"+
+"Task: "+task+"\n"+
+"Action: "+action+"\n"+
+"Severity: "+severity
+
+);
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Watchdog IDS Login</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#020617;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+overflow:hidden;
+}
+
+
+/* ANIMATED BACKGROUND */
+
+#networkCanvas{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:-1;
+}
+
+
+/* LOGIN BOX */
+
+.login-box{
+
+background:#1e293b;
+padding:40px;
+border-radius:12px;
+
+width:360px;
+
+box-shadow:0 0 25px rgba(0,0,0,0.6);
+
+text-align:center;
+
+}
+
+
+/* BIGGER LOGO */
+
+.logo{
+
+width:130px;
+margin-bottom:15px;
+
+animation:pulse 2s infinite;
+
+}
+
+
+@keyframes pulse{
+
+0%{transform:scale(1)}
+50%{transform:scale(1.08)}
+100%{transform:scale(1)}
+
+}
+
+
+/* TITLE */
+
+h2{
+margin-bottom:25px;
+}
+
+
+/* INPUT + BUTTON SAME SIZE */
+
+input,button{
+
+width:100%;
+
+padding:14px;
+
+margin:12px 0;
+
+border:none;
+
+border-radius:6px;
+
+box-sizing:border-box;
+
+font-size:15px;
+
+}
+
+
+/* INPUT STYLE */
+
+input{
+
+outline:none;
+
+transition:0.3s;
+
+}
+
+
+/* INPUT LIGHT EFFECT */
+
+input:focus{
+
+box-shadow:0 0 18px #38bdf8;
+
+background:#f1f5f9;
+
+transform:scale(1.02);
+
+}
+
+
+/* BUTTON */
+
+button{
+
+font-weight:bold;
+
+color:white;
+
+/* Professional Blue Gradient */
+
+background:linear-gradient(90deg,#3b82f6,#2563eb);
+
+cursor:pointer;
+
+transition:0.3s;
+
+}
+
+
+/* Hover Effect */
+
+button:hover{
+
+background:linear-gradient(90deg,#2563eb,#1d4ed8);
+
+transform:scale(1.03);
+
+box-shadow:0 0 20px #3b82f6;
+
+}
+
+
+/* FOOTER */
+
+.footer{
+margin-top:15px;
+font-size:15px;
+}
+
+
+a{
+color:#60a5fa;
+text-decoration:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<canvas id="networkCanvas"></canvas>
+
+
+<div class="login-box">
+
+<img src="/static/logo.png" class="logo">
+
+<h2>Watchdog IDS</h2>
+
+
+<form method="POST">
+
+<input type="text" name="username" placeholder="Username" required>
+
+<input type="password" name="password" placeholder="Password" required>
+
+<button type="submit">
+
+Login
+
+</button>
+
+</form>
+
+
+<div class="footer">
+
+No account?
+
+<a href="/register">
+
+Register here
+
+</a>
+
+</div>
+
+</div>
+
+
+<script>
+
+const canvas = document.getElementById("networkCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+
+let mouse = {x:0,y:0};
+
+document.addEventListener("mousemove",e=>{
+mouse.x=e.clientX;
+mouse.y=e.clientY;
+});
+
+
+/* CIRCUIT LINES */
+
+let lines=[];
+
+for(let i=0;i<25;i++){
+
+lines.push({
+
+y:Math.random()*canvas.height,
+speed:1+Math.random()*2,
+offset:Math.random()*canvas.width
+
+});
+
+}
+
+
+/* GLOW PARTICLES */
+
+let pulses=[];
+
+for(let i=0;i<20;i++){
+
+pulses.push({
+
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+speed:2+Math.random()*2
+
+});
+
+}
+
+
+
+function draw(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+
+/* DARK OVERLAY */
+
+ctx.fillStyle="rgba(0,0,0,0.45)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+
+
+/* CIRCUIT LINES */
+
+lines.forEach(l=>{
+
+l.offset+=l.speed;
+
+if(l.offset>canvas.width)
+l.offset=0;
+
+
+/* LONG LINE */
+
+ctx.beginPath();
+
+ctx.moveTo(0,l.y);
+
+ctx.lineTo(canvas.width,l.y);
+
+ctx.strokeStyle="rgba(0,180,255,0.15)";
+ctx.lineWidth=1;
+
+ctx.stroke();
+
+
+/* BRIGHT SEGMENT */
+
+ctx.beginPath();
+
+ctx.moveTo(l.offset,l.y);
+
+ctx.lineTo(l.offset+120,l.y);
+
+ctx.strokeStyle="#38bdf8";
+ctx.lineWidth=3;
+
+ctx.stroke();
+
+});
+
+
+/* CIRCUIT CONNECTORS */
+
+for(let i=0;i<40;i++){
+
+let x=Math.random()*canvas.width;
+let y=Math.random()*canvas.height;
+
+ctx.beginPath();
+
+ctx.moveTo(x,y);
+
+ctx.lineTo(x+30,y);
+
+ctx.lineTo(x+30,y+30);
+
+ctx.strokeStyle="rgba(56,189,248,0.15)";
+
+ctx.stroke();
+
+}
+
+
+
+/* MOVING LIGHT PULSES */
+
+pulses.forEach(p=>{
+
+p.x+=p.speed;
+
+if(p.x>canvas.width)
+p.x=0;
+
+
+let g=ctx.createRadialGradient(
+p.x,p.y,1,
+p.x,p.y,8
+);
+
+g.addColorStop(0,"#38bdf8");
+g.addColorStop(1,"transparent");
+
+ctx.fillStyle=g;
+
+ctx.beginPath();
+
+ctx.arc(p.x,p.y,8,0,Math.PI*2);
+
+ctx.fill();
+
+});
+
+
+/* CURSOR GLOW */
+
+let glow=ctx.createRadialGradient(
+mouse.x,mouse.y,10,
+mouse.x,mouse.y,150
+);
+
+glow.addColorStop(0,"rgba(56,189,248,0.25)");
+glow.addColorStop(1,"transparent");
+
+ctx.fillStyle=glow;
+
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+
+
+requestAnimationFrame(draw);
+
+}
+
+draw();
+
+
+window.onresize=function(){
+
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+}
+
+</script>
+
+
+</body>
+</html>

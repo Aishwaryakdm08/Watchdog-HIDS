@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Register - Watchdog</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#020617;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+overflow:hidden;
+}
+
+
+/* BACKGROUND */
+
+#networkCanvas{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:-1;
+}
+
+/* REGISTER BOX */
+
+.register-box{
+
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+width:340px;
+
+box-shadow:0 0 25px rgba(0,0,0,0.6);
+
+text-align:center;
+
+}
+
+.logo{
+
+width:110px;
+margin-bottom:20px;
+
+animation:pulse 2s infinite;
+
+}
+
+@keyframes pulse{
+
+0%{transform:scale(1)}
+50%{transform:scale(1.08)}
+100%{transform:scale(1)}
+
+}
+
+
+h2{
+margin-bottom:20px;
+}
+
+/* INPUTS */
+
+input{
+
+width:100%;
+padding:14px;
+margin:12px 0;
+
+border:none;
+border-radius:6px;
+
+outline:none;
+
+transition:0.3s;
+
+box-sizing:border-box;
+
+}
+
+input:focus{
+
+box-shadow:0 0 15px #38bdf8;
+
+background:#f1f5f9;
+
+transform:scale(1.02);
+
+}
+
+button{
+
+width:100%;
+padding:14px;
+margin:12px 0;
+
+border:none;
+border-radius:6px;
+
+box-sizing:border-box;
+
+font-size:15px;
+font-weight:bold;
+
+color:white;
+
+background:linear-gradient(90deg,#22c55e,#16a34a);
+
+cursor:pointer;
+
+transition:0.3s;
+
+}
+
+button:hover{
+
+background:linear-gradient(90deg,#16a34a,#15803d);
+
+transform:scale(1.02);
+
+box-shadow:0 0 15px #22c55e;
+
+}
+
+.footer{
+margin-top:15px;
+}
+
+a{
+color:#60a5fa;
+text-decoration:none;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<canvas id="networkCanvas"></canvas>
+
+
+<div class="register-box">
+
+<img src="/static/logo.png" class="logo">
+
+<h2>Create Admin Account</h2>
+
+
+<form method="POST">
+
+<input type="text" name="fullname" placeholder="Full Name" required>
+
+<input type="text" name="username" placeholder="Username" required>
+
+<input type="email" name="email" placeholder="Email" required>
+
+<input type="password" name="password"
+placeholder="Password (12-16 chars, strong)" required>
+
+<button type="submit">
+Register
+</button>
+
+</form>
+
+
+<div class="footer">
+
+Already registered?
+
+<a href="/login">
+Login
+</a>
+
+</div>
+
+</div>
+
+<script>
+
+const canvas = document.getElementById("networkCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+
+let mouse = {x:0,y:0};
+
+document.addEventListener("mousemove",e=>{
+mouse.x=e.clientX;
+mouse.y=e.clientY;
+});
+
+let lines=[];
+
+for(let i=0;i<25;i++){
+
+lines.push({
+
+y:Math.random()*canvas.height,
+speed:1+Math.random()*2,
+offset:Math.random()*canvas.width
+});
+
+}
+
+let pulses=[];
+
+for(let i=0;i<20;i++){
+
+pulses.push({
+
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+speed:2+Math.random()*2
+
+});
+
+}
+
+function draw(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="rgba(0,0,0,0.45)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+lines.forEach(l=>{
+
+l.offset+=l.speed;
+
+if(l.offset>canvas.width)
+l.offset=0;
+
+ctx.beginPath();
+
+ctx.moveTo(0,l.y);
+
+ctx.lineTo(canvas.width,l.y);
+
+ctx.strokeStyle="rgba(0,180,255,0.15)";
+ctx.lineWidth=1;
+
+ctx.stroke();
+
+ctx.beginPath();
+
+ctx.moveTo(l.offset,l.y);
+
+ctx.lineTo(l.offset+120,l.y);
+
+ctx.strokeStyle="#38bdf8";
+ctx.lineWidth=3;
+
+ctx.stroke();
+
+});
+
+for(let i=0;i<40;i++){
+
+let x=Math.random()*canvas.width;
+let y=Math.random()*canvas.height;
+
+ctx.beginPath();
+
+ctx.moveTo(x,y);
+
+ctx.lineTo(x+30,y);
+
+ctx.lineTo(x+30,y+30);
+
+ctx.strokeStyle="rgba(56,189,248,0.15)";
+
+ctx.stroke();
+
+}
+
+pulses.forEach(p=>{
+
+p.x+=p.speed;
+
+if(p.x>canvas.width)
+p.x=0;
+
+let g=ctx.createRadialGradient(
+p.x,p.y,1,
+p.x,p.y,8
+);
+
+g.addColorStop(0,"#38bdf8");
+g.addColorStop(1,"transparent");
+
+ctx.fillStyle=g;
+
+ctx.beginPath();
+
+ctx.arc(p.x,p.y,8,0,Math.PI*2);
+
+ctx.fill();
+
+});
+
+let glow=ctx.createRadialGradient(
+mouse.x,mouse.y,10,
+mouse.x,mouse.y,150
+);
+
+glow.addColorStop(0,"rgba(56,189,248,0.25)");
+glow.addColorStop(1,"transparent");
+
+ctx.fillStyle=glow;
+
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+requestAnimationFrame(draw);
+}
+
+draw();
+
+window.onresize=function(){
+
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+}
+
+</script>
+
+</body>
+</html>

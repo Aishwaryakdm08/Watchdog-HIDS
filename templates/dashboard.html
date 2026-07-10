@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Watchdog IDS Dashboard</title>
+<meta http-equiv="refresh" content="10">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:#0b1220;
+color:white;
+}
+
+/* HEADER */
+.header{
+background:#020617;
+padding:18px 30px;
+font-size:22px;
+font-weight:600;
+border-bottom:1px solid #1f2937;
+position:relative;
+letter-spacing:.5px;
+display:flex;
+align-items:center;
+}
+
+/* LOGO */
+.logo{
+width:45px;
+margin-right:15px;
+}
+
+/* MENU */
+.menu-container{
+position:absolute;
+right:25px;
+top:14px;
+}
+.menu-btn{
+background:#1e293b;
+border:none;
+padding:10px 16px;
+border-radius:8px;
+color:white;
+cursor:pointer;
+transition:.2s;
+}
+.menu-btn:hover{
+background:#334155;
+}
+
+/* DROPDOWN */
+.dropdown{
+display:none;
+position:absolute;
+right:0;
+top:45px;
+background:#020617;
+border:1px solid #1f2937;
+border-radius:10px;
+width:190px;
+box-shadow:0 10px 30px rgba(0,0,0,.6);
+overflow:hidden;
+z-index:999;
+}
+
+.dropdown a{
+display:block;
+padding:13px;
+color:#cbd5f5;
+text-decoration:none;
+border-bottom:1px solid #1f2937;
+transition:.2s;
+}
+
+.dropdown a:hover{
+background:#1e293b;
+padding-left:18px;
+}
+/* GRID */
+.dashboard{
+display:grid;
+grid-template-columns:3fr 1fr;
+gap:22px;
+padding:25px;
+}
+/* CARDS */
+.cards{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:18px;
+margin-bottom:10px;
+}
+
+.card{
+background:#111827;
+padding:26px;
+border-radius:14px;
+box-shadow:0 8px 25px rgba(0,0,0,.4);
+border:1px solid #1f2937;
+}
+
+.card h3{
+margin:0;
+font-size:15px;
+color:#94a3b8;
+font-weight:500;
+}
+
+.card h1{
+margin-top:12px;
+font-size:34px;
+font-weight:700;
+}
+
+/* ALERT CARD */
+.alert-card{
+background:linear-gradient(90deg,#7f1d1d,#450a0a);
+}
+
+/* HEALTH CARD */
+.health-card{
+background:linear-gradient(90deg,#064e3b,#022c22);
+}
+
+/* SIDEBAR */
+.sidebar{
+background:#111827;
+padding:20px;
+border-radius:14px;
+border:1px solid #1f2937;
+box-shadow:0 8px 25px rgba(0,0,0,.5);
+}
+
+.sidebar h3{
+margin-top:5px;
+margin-bottom:15px;
+color:#e5e7eb;
+font-weight:600;
+}
+/* TABLE */
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th{
+background:#020617;
+padding:11px;
+font-weight:500;
+color:#9ca3af;
+font-size:13px;
+text-transform:uppercase;
+}
+
+td{
+padding:11px;
+border-bottom:1px solid #1f2937;
+font-size:14px;
+color:#e5e7eb;
+}
+
+tr:hover{
+background:#1e293b;
+}
+
+/* CHART BOX */
+.chart-box{
+background:#111827;
+margin-top:20px;
+padding:20px;
+border-radius:14px;
+border:1px solid #1f2937;
+box-shadow:0 8px 25px rgba(0,0,0,.5);
+}
+
+.chart-box h3{
+margin-top:5px;
+margin-bottom:15px;
+font-weight:600;
+color:#e5e7eb;
+}
+
+/* PIE */
+.pie-layout{
+display:flex;
+align-items:center;
+justify-content:space-between;
+}
+
+.pie-left{
+width:60%;
+}
+
+.pie-right{
+width:35%;
+font-size:14px;
+color:#cbd5f5;
+line-height:1.9;
+}
+
+/* PIE SIZE */
+#pieChart{
+height:290px !important;
+max-width:280px;
+margin:auto;
+}
+#attackPie{
+height:290px !important;
+max-width:280px;
+margin:auto;
+}
+
+/* LINE CHART FULL WIDTH */
+#lineChart{
+height:340px !important;
+width:100% !important;
+}
+
+/* COLORS */
+.low{color:#22c55e;font-weight:bold;}
+.medium{color:#eab308;font-weight:bold;}
+.high{color:#ef4444;font-weight:bold;}
+.critical{
+color:#7f1d1d;   
+font-weight:bold;
+}
+
+.health-good{color:#22c55e;}
+.health-medium{color:#eab308;}
+.health-bad{color:#ef4444;}
+
+</style>
+</head>
+<body>
+
+<div class="header">
+<img src="/static/logo.png" class="logo">
+
+Watchdog IDS Dashboard
+
+<div class="menu-container">
+<button class="menu-btn" onclick="toggleMenu()">
+☰ Menu
+</button>
+
+<div id="dropdownMenu" class="dropdown">
+<a href="/dashboard">Dashboard</a>
+<a href="/live-logs">Live Logs</a>
+<a href="/alerts">Alerts</a>
+<a href="/report">Reports</a>
+<a href="/logout">Logout</a>
+</div>
+</div>
+</div>
+<div class="dashboard">
+<div>
+
+<!-- CARDS -->
+<div class="cards">
+<div class="card">
+<h3>Total Logs</h3>
+<h1>{{ total_logs }}</h1>
+</div>
+
+<div class="card alert-card">
+<h3>Alerts Detected</h3>
+<h1>{{ alert_logs }}</h1>
+</div>
+
+<div class="card health-card">
+<h3>System Health</h3>
+
+<h1 class="
+{% if health>70 %}
+health-good
+{% elif health>40 %}
+health-medium
+{% else %}
+health-bad
+{% endif %}
+">
+
+{{health}}%
+</h1>
+</div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+<!-- LOG SOURCE PIE -->
+<div class="chart-box">
+<h3>Log Source Distribution</h3>
+
+<div style="text-align:center;">
+<canvas id="pieChart"></canvas>
+<div id="pieLegend" style="margin-top:15px;"></div>
+</div>
+</div>
+
+<!-- TOP ATTACK TYPES PIE -->
+<div class="chart-box">
+<h3>Top Attack Types</h3>
+
+<div style="text-align:center;">
+<canvas id="attackPie"></canvas>
+<div id="attackLegend" style="margin-top:15px;"></div>
+</div>
+</div>
+</div>
+
+<!-- LINE CHART -->
+<div class="chart-box">
+<h3>Threat Activity Over Time</h3>
+<canvas id="lineChart"></canvas>
+</div>
+</div>
+
+<!-- ALERT SIDEBAR -->
+<div class="sidebar">
+<h3>Recent Alerts</h3>
+<table>
+<tr>
+<th>Attack</th>
+<th>Severity</th>
+<th>Time</th>
+</tr>
+
+{% for log in recent_alerts %}
+<tr>
+<td>{{log.attack_type}}</td>
+<td class="{{log.severity|lower}}">
+{{log.severity}}
+</td>
+<td>{{log.created_at}}</td>
+</tr>
+
+{% endfor %}
+</table>
+</div>
+</div>
+<script>
+
+function toggleMenu(){
+var menu=document.getElementById("dropdownMenu");
+menu.style.display=
+menu.style.display=="block"
+?"none":"block";
+}
+
+const pieLabels=JSON.parse('{{source_labels|safe}}');
+const pieValues=JSON.parse('{{source_values|safe}}');
+const dullColors=[
+"#495282",   
+"#3f608a",   
+"#346f91",   
+"#2a7f99",   
+"#1d8ea0",   
+"#0ea5a8"    
+];
+
+const pieChart=new Chart(document.getElementById("pieChart"),{
+type:"pie",
+data:{
+labels:pieLabels,
+datasets:[{
+data:pieValues,
+backgroundColor:dullColors,
+borderColor:"#0b1220",
+borderWidth:2
+}]
+},
+plugins:[ChartDataLabels],
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{
+legend:{display:false},
+datalabels:{
+color:"#e5e7eb",
+font:{size:12,weight:"600"},
+
+formatter:(value,ctx)=>{
+let sum=ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+return ((value*100)/sum).toFixed(1)+"%";
+}
+}
+}
+}
+});
+
+/* LEGEND */
+let legendHTML="";
+let total=pieValues.reduce((a,b)=>a+b,0);
+for(let i=0;i<pieLabels.length;i++){
+let percent=((pieValues[i]*100)/total).toFixed(1);
+legendHTML+=`
+<div>
+<span style="
+display:inline-block;
+width:14px;
+height:14px;
+background:${dullColors[i]};
+margin-right:10px;
+border-radius:4px;
+"></span>
+${pieLabels[i]} — ${percent}%
+</div>
+`;
+}
+
+document.getElementById("pieLegend").innerHTML=legendHTML;
+
+const attackLabels=JSON.parse('{{attack_labels|safe}}');
+const attackValues=JSON.parse('{{attack_values|safe}}');
+const attackColors=[
+"#7f1d1d",
+"#9a3412",
+"#92400e",
+"#78350f",
+"#57534e",
+"#3f3f46"
+];
+
+const attackPie=new Chart(document.getElementById("attackPie"),{
+type:"pie",
+data:{
+labels:attackLabels,
+datasets:[{
+data:attackValues,
+backgroundColor:attackColors,
+borderColor:"#0b1220",
+borderWidth:2
+}]
+},
+
+plugins:[ChartDataLabels],
+options:{
+
+responsive:true,
+maintainAspectRatio:false,
+
+plugins:{
+legend:{display:false},
+
+datalabels:{
+color:"#e5e7eb",
+font:{size:12,weight:"600"},
+formatter:(value,ctx)=>{
+let sum=ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+return ((value*100)/sum).toFixed(1)+"%";
+}
+}
+}
+}
+});
+
+/* ATTACK LEGEND */
+let attackLegendHTML="";
+let attackTotal=attackValues.reduce((a,b)=>a+b,0);
+
+for(let i=0;i<attackLabels.length;i++){
+let percent=((attackValues[i]*100)/attackTotal).toFixed(1);
+attackLegendHTML+=`
+<div>
+
+<span style="
+display:inline-block;
+width:14px;
+height:14px;
+background:${attackColors[i]};
+margin-right:10px;
+border-radius:4px;
+"></span>
+
+${attackLabels[i]} — ${percent}%
+</div>
+`;
+}
+
+document.getElementById("attackLegend").innerHTML=attackLegendHTML;
+
+/* LINE CHART PROFESSIONAL */
+
+const times=JSON.parse('{{ chart_times|safe }}');
+const totals=JSON.parse('{{ chart_total|safe }}');
+const threats=JSON.parse('{{ chart_threats|safe }}');
+
+new Chart(document.getElementById("lineChart"),{
+
+type:"line",
+data:{
+labels:times,
+datasets:[
+{
+label:"Total Logs",
+data:totals,
+borderColor:"#60a5fa",
+borderWidth:3,
+pointRadius:3,
+tension:0.35
+},
+
+{
+label:"Threats",
+data:threats,
+borderColor:"#f87171",
+borderWidth:3,
+pointRadius:3,
+tension:0.35
+}
+]
+},
+
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{
+legend:{labels:{color:"white"}}
+},
+
+scales:{
+x:{
+ticks:{color:"#9ca3af"},
+grid:{color:"#1f2937"}
+},
+
+y:{
+ticks:{color:"#9ca3af"},
+grid:{color:"#1f2937"},
+beginAtZero:true
+}
+}
+}
+});
+
+</script>
+</body>
+</html>
